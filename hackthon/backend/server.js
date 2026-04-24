@@ -1,14 +1,27 @@
 const express = require('express');
 const cors = require('cors');
-const complaintsRouter = require('./routes/complaints');
-const workOrdersRouter = require('./routes/workOrders');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Shared data storage
+const sharedData = {
+  complaints: [],
+  workOrders: []
+};
+
+// Pass shared data to routes via middleware
+app.use((req, res, next) => {
+  req.appData = sharedData;
+  next();
+});
+
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+const complaintsRouter = require('./routes/complaints');
+const workOrdersRouter = require('./routes/workOrders');
 
 // Routes
 app.use('/api/complaints', complaintsRouter);

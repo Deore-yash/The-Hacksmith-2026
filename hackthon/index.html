@@ -332,33 +332,7 @@ button:active,
 </div>
 
 <script>
-let complaints = [];
-let workOrders = [];
-
-const departmentKeywords = {
-    roads: ["road", "pothole", "street", "traffic", "intersection", "asphalt"],
-    sanitation: ["garbage", "trash", "sewer", "drain", "cleaning", "waste", "smell"],
-    water: ["water", "leak", "pipe", "supply", "tap", "drainage", "flood"],
-    electricity: ["electric", "power", "light", "outage", "wiring", "transformer", "socket"],
-    parks: ["park", "garden", "playground", "trees", "green", "bench", "grass"],
-    "illegal construction": ["construction", "building", "permit", "illegal", "encroachment", "fence"]
-};
-
-const severityWeight = {
-    Low: 1,
-    Medium: 2,
-    High: 3,
-    Critical: 4
-};
-
-const departmentNames = {
-    roads: "Roads Department",
-    sanitation: "Sanitation Department",
-    water: "Water Services",
-    electricity: "Electricity Department",
-    parks: "Parks & Recreation",
-    "illegal construction": "Building Control"
-};
+const API_URL = 'http://localhost:5000/api';
 
 const statusLabels = {
     pending: "status-pending",
@@ -376,7 +350,8 @@ const acknowledgement = document.getElementById("acknowledgement");
 const complaintList = document.getElementById("complaintList");
 const workOrderList = document.getElementById("workOrderList");
 
-form.addEventListener("submit", function(e) {
+// Form submission with API call
+form.addEventListener("submit", async function(e) {
     e.preventDefault();
 
     const name = document.getElementById("name").value.trim();
@@ -385,144 +360,103 @@ form.addEventListener("submit", function(e) {
     const residents = Number(document.getElementById("residents").value) || 1;
     const severity = document.getElementById("severity").value;
 
-    const normalizedLocation = normalizeText(location);
-    const normalizedDescription = normalizeText(description);
-    const duplicate = findDuplicate(normalizedLocation, normalizedDescription);
+    try {
+        const response = await fetch(`${API_URL}/complaints`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ name, location, description, residents, severity })
+        });
 
-    if (duplicate) {
-        showAcknowledgement(
-            draftAcknowledgement(duplicate, true, duplicate.id)
-        );
-        return;
-    }
+        const data = await response.json();
 
-    const departmentKey = detectDepartment(normalizedDescription + " " + normalizedLocation);
-    const department = departmentNames[departmentKey] || "General Services";
-    const priorityScore = calculatePriorityScore(severity, residents);
-    const priority = getPriorityLabel(priorityScore);
-    const workOrder = createWorkOrder(complaints.length + 1, departmentKey, department, location, description, priorityScore, residents, severity);
-
-    const complaint = {
-        id: complaints.length + 1,
-        name,
-        location,
-        description,
-        department,
-        departmentKey,
-        severity,
-        residents,
-        priority,
-        priorityScore,
-        status: "Pending",
-        createdAt: new Date().toLocaleString(),
-        workOrderId: workOrder.orderId
-    };
-
-    complaints.push(complaint);
-    workOrders.push(workOrder);
-
-    showAcknowledgement(draftAcknowledgement(complaint, false));
-    displayComplaints();
-    displayWorkOrders();
-    form.reset();
-});
-
-function normalizeText(text) {
-    return text.toLowerCase().replace(/\s+/g, " ").trim();
-}
-
-function findDuplicate(location, description) {
-    return complaints.find(c => {
-        const sameLocation = normalizeText(c.location) === location;
-        const sameDescription = normalizeText(c.description) === description;
-        const fuzzyMatch = description.includes(normalizeText(c.description).slice(0, 20)) || normalizeText(c.description).includes(description.slice(0, 20));
-        return sameLocation && (sameDescription || fuzzyMatch);
-    });
-}
-
-function detectDepartment(text) {
-    for (const dept in departmentKeywords) {
-        for (const keyword of departmentKeywords[dept]) {
-            if (text.includes(keyword)) {
-                return dept;
-            }
+        if (response.status === 409) {
+            // Duplicate complaint
+            showAcknowledgement(`
+                <div class="alert-box duplicate">
+                    <strong>Duplicate Notice:</strong>
+                    We already have an open complaint for this issue at the same location under ticket #${data.duplicateId}.
+                    Our team is reviewing it and you will receive an update shortly.
+                </div>
+            `);
+        } else if (response.ok) {
+            // Success
+            const complaint = data.complaint;
+            showAcknowledgement(`
+                <div class="alert-box success">
+                    <strong>Thank you, ${complaint.name}.</strong>
+                    Your complaint has been routed to the <em>${complaint.department}</em>.
+                    Ticket #${complaint.id} has been created with a priority score of ${complaint.priorityScore}.
+                    A work order (${data.workOrder.orderId}) has been generated and the responsible team will follow up.
+                </div>
+            `);
+            form.reset();
+            await loadComplaints();
+            await loadWorkOrders();
         }
-    }
-    return "sanitation";
-}
-
-function calculatePriorityScore(severity, residents) {
-    const base = severityWeight[severity] || 1;
-    const residentFactor = Math.min(residents, 20) / 4;
-    return Math.min(Math.round(base * 2 + residentFactor), 10);
-}
-
-function getPriorityLabel(score) {
-    if (score >= 8) return "High";
-    if (score >= 5) return "Medium";
-    return "Low";
-}
-
-function draftAcknowledgement(complaint, isDuplicate, duplicateId) {
-    if (isDuplicate) {
-        return `
+    } catch (error) {
+        console.error('Error submitting complaint:', error);
+        showAcknowledgement(`
             <div class="alert-box duplicate">
-                <strong>Duplicate Notice:</strong>
-                We already have an open complaint for this issue at the same location under ticket #${duplicateId}.
-                Our team is reviewing it and you will receive an update shortly.
-            </div>`;
+                <strong>Error:</strong>
+                Failed to submit complaint. Please check if the backend server is running on http://localhost:5000
+            </div>
+        `);
     }
-
-    return `
-        <div class="alert-box success">
-            <strong>Thank you, ${complaint.name}.</strong>
-            Your complaint has been routed to the <em>${complaint.department}</em>.
-            Ticket #${complaint.id} has been created with a priority score of ${complaint.priorityScore}.
-            A work order (#${complaint.workOrderId}) has been generated and the responsible team will follow up.
-        </div>`;
-}
+});
 
 function showAcknowledgement(messageHtml) {
     acknowledgement.innerHTML = messageHtml;
 }
 
-function createWorkOrder(id, departmentKey, department, location, description, priorityScore, residents, severity) {
-    const dueDays = priorityScore >= 8 ? 1 : priorityScore >= 5 ? 3 : 5;
-    const dueDate = new Date();
-    dueDate.setDate(dueDate.getDate() + dueDays);
-
-    return {
-        orderId: `WO-${String(id).padStart(4, "0")}`,
-        assignedDepartment: department,
-        departmentKey,
-        location,
-        issue: description,
-        priorityScore,
-        severity,
-        residentsAffected: residents,
-        status: "Assigned",
-        createdAt: new Date().toLocaleString(),
-        dueDate: dueDate.toLocaleDateString()
-    };
+async function loadComplaints() {
+    try {
+        const response = await fetch(`${API_URL}/complaints`);
+        const complaints = await response.json();
+        displayComplaints(complaints);
+    } catch (error) {
+        console.error('Error loading complaints:', error);
+        complaintList.innerHTML = '<div class="alert-box duplicate"><strong>Error:</strong> Failed to load complaints</div>';
+    }
 }
 
-function displayComplaints() {
+async function loadWorkOrders() {
+    try {
+        const response = await fetch(`${API_URL}/work-orders`);
+        const workOrders = await response.json();
+        displayWorkOrders(workOrders);
+    } catch (error) {
+        console.error('Error loading work orders:', error);
+        workOrderList.innerHTML = '<div class="alert-box duplicate"><strong>Error:</strong> Failed to load work orders</div>';
+    }
+}
+
+function displayComplaints(complaints) {
     complaintList.innerHTML = "";
+
+    if (complaints.length === 0) {
+        complaintList.innerHTML = '<p>No complaints yet.</p>';
+        return;
+    }
 
     complaints.forEach(c => {
         const div = document.createElement("div");
         div.className = "card";
 
+        const priorityClass = c.priority ? c.priority.toLowerCase() : 'low';
+        const statusClass = statusLabels[c.status.toLowerCase()] || 'status-pending';
+
         div.innerHTML = `
             <header>
                 <strong>Complaint #${c.id}</strong>
-                <span class="badge priority-${c.priority.toLowerCase()}">${c.priority}</span>
+                <span class="badge priority-${priorityClass}">${c.priority}</span>
             </header>
             <div class="card-grid">
                 <div><strong>Name</strong><br>${c.name}</div>
                 <div><strong>Location</strong><br>${c.location}</div>
                 <div><strong>Department</strong><br>${c.department}</div>
-                <div><strong>Status</strong><br><span class="status ${statusLabels[c.status.toLowerCase()]}">${c.status}</span></div>
+                <div><strong>Status</strong><br><span class="status ${statusClass}">${c.status}</span></div>
                 <div><strong>Severity</strong><br>${c.severity}</div>
                 <div><strong>Residents</strong><br>${c.residents}</div>
             </div>
@@ -534,23 +468,30 @@ function displayComplaints() {
     });
 }
 
-function displayWorkOrders() {
+function displayWorkOrders(workOrders) {
     workOrderList.innerHTML = "";
+
+    if (workOrders.length === 0) {
+        workOrderList.innerHTML = '<p>No work orders yet.</p>';
+        return;
+    }
 
     workOrders.forEach(order => {
         const div = document.createElement("div");
         div.className = "card";
 
+        const priorityClass = order.priorityScore >= 8 ? 'high' : order.priorityScore >= 5 ? 'medium' : 'low';
+
         div.innerHTML = `
             <header>
                 <strong>Work Order ${order.orderId}</strong>
-                <span class="badge priority-${getPriorityLabel(order.priorityScore).toLowerCase()}">${getPriorityLabel(order.priorityScore)}</span>
+                <span class="badge priority-${priorityClass}">P${order.priorityScore}</span>
             </header>
             <div class="card-grid">
                 <div><strong>Department</strong><br>${order.assignedDepartment}</div>
                 <div><strong>Location</strong><br>${order.location}</div>
                 <div><strong>Severity</strong><br>${order.severity}</div>
-                <div><strongit g>Due Date</strong><br>${order.dueDate}</div>
+                <div><strong>Due Date</strong><br>${order.dueDate}</div>
                 <div><strong>Residents</strong><br>${order.residentsAffected}</div>
             </div>
             <p><strong>Work Order Details</strong><br>${order.issue}</p>
@@ -560,14 +501,30 @@ function displayWorkOrders() {
     });
 }
 
-function markDone(id) {
-    complaints.forEach(c => {
-        if (c.id === id) {
-            c.status = "Resolved";
+async function markDone(id) {
+    try {
+        const response = await fetch(`${API_URL}/complaints/${id}/status`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ status: 'Resolved' })
+        });
+
+        if (response.ok) {
+            await loadComplaints();
         }
-    });
-    displayComplaints();
+    } catch (error) {
+        console.error('Error updating complaint:', error);
+        alert('Failed to update complaint status');
+    }
 }
+
+// Load data when page loads
+document.addEventListener('DOMContentLoaded', async function() {
+    await loadComplaints();
+    await loadWorkOrders();
+});
 </script>
 
 </body>

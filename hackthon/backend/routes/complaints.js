@@ -11,6 +11,8 @@ let workOrders = [];
 router.post('/', (req, res) => {
   try {
     const { name, location, description, residents, severity } = req.body;
+    complaints = req.appData.complaints;
+    workOrders = req.appData.workOrders;
 
     // Validation
     if (!name || !location || !description || !severity) {
@@ -97,11 +99,13 @@ router.post('/', (req, res) => {
 
 // Get all complaints
 router.get('/', (req, res) => {
+  complaints = req.appData.complaints;
   res.json(complaints);
 });
 
 // Get a specific complaint
 router.get('/:id', (req, res) => {
+  complaints = req.appData.complaints;
   const complaint = complaints.find(c => c.id === parseInt(req.params.id));
   if (!complaint) {
     return res.status(404).json({ error: 'Complaint not found' });
@@ -113,6 +117,7 @@ router.get('/:id', (req, res) => {
 router.patch('/:id/status', (req, res) => {
   try {
     const { status } = req.body;
+    complaints = req.appData.complaints;
     const complaint = complaints.find(c => c.id === parseInt(req.params.id));
     
     if (!complaint) {

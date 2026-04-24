@@ -5,11 +5,13 @@ let workOrders = [];
 
 // Get all work orders
 router.get('/', (req, res) => {
+  workOrders = req.appData.workOrders;
   res.json(workOrders);
 });
 
 // Get work orders by department
 router.get('/department/:departmentKey', (req, res) => {
+  workOrders = req.appData.workOrders;
   const { departmentKey } = req.params;
   const filtered = workOrders.filter(wo => wo.departmentKey === departmentKey);
   res.json(filtered);
@@ -17,6 +19,7 @@ router.get('/department/:departmentKey', (req, res) => {
 
 // Get a specific work order
 router.get('/:orderId', (req, res) => {
+  workOrders = req.appData.workOrders;
   const workOrder = workOrders.find(wo => wo.orderId === req.params.orderId);
   if (!workOrder) {
     return res.status(404).json({ error: 'Work order not found' });
@@ -28,6 +31,7 @@ router.get('/:orderId', (req, res) => {
 router.patch('/:orderId/status', (req, res) => {
   try {
     const { status } = req.body;
+    workOrders = req.appData.workOrders;
     const workOrder = workOrders.find(wo => wo.orderId === req.params.orderId);
     
     if (!workOrder) {
