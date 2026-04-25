@@ -1,313 +1,332 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<title>Complaint Management System</title>
+    <meta charset="UTF-8">
+    <title>Complaint Management System</title>
 
-<style>
-:root {
-    --surface: rgba(255, 255, 255, 0.85);
-    --surface-strong: rgba(255, 255, 255, 0.95);
-    --accent: #6c63ff;
-    --accent-soft: #9b96ff;
-    --text: #212121;
-    --muted: #5d6675;
-    --danger: #f26b6b;
-    --success: #3ecf8e;
-    --warning: #f3a153;
-}
-
-* {
-    box-sizing: border-box;
-}
-
-body {
-    margin: 0;
-    min-height: 100vh;
-    font-family: 'Inter', Arial, sans-serif;
-    color: var(--text);
-    background: #D552A3;
-}
-
-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 24px;
-    padding: 32px 24px;
-    background: linear-gradient(135deg, #4435ff 0%, #6c63ff 100%);
-    color: white;
-    box-shadow: 0 24px 60px rgba(55, 62, 130, 0.2);
-}
-
-.header-content {
-    flex: 1;
-    text-align: center;
-}
-
-header h2 {
-    margin: 0;
-    font-size: clamp(1.8rem, 2.6vw, 3rem);
-    letter-spacing: 0.04em;
-}
-
-header p {
-    margin: 10px auto 0;
-    max-width: 720px;
-    opacity: 0.88;
-    font-size: 1rem;
-}
-
-.logo {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: auto;
-    height: 90px;
-    padding: 8px 12px;
-    background: rgba(255, 255, 255, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 12px;
-    flex-shrink: 0;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
-    backdrop-filter: blur(10px);
-}
-
-.logo img {
-    max-height: 100%;
-    width: auto;
-    object-fit: contain;
-    display: block;
-}
-
-.container {
-    width: min(1080px, calc(100% - 32px));
-    margin: -48px auto 40px;
-    display: grid;
-    gap: 24px;
-}
-
-.panel {
-    background: var(--surface);
-    border: 1px solid rgba(255, 255, 255, 0.55);
-    border-radius: 28px;
-    padding: 28px;
-    backdrop-filter: blur(16px);
-    box-shadow: 0 18px 50px rgba(100, 113, 155, 0.12);
-}
-
-h3 {
-    margin-top: 0;
-    font-size: 1.4rem;
-    color: #2a2d3d;
-}
-
-form {
-    display: grid;
-    gap: 16px;
-}
-
-input,
-textarea {
-    width: 100%;
-    border: 1px solid rgba(102, 112, 133, 0.18);
-    border-radius: 18px;
-    padding: 16px 18px;
-    background: rgba(255, 255, 255, 0.9);
-    font-size: 1rem;
-    transition: border-color 180ms ease, box-shadow 180ms ease;
-}
-
-input:focus,
-textarea:focus {
-    outline: none;
-    border-color: rgba(108, 99, 255, 0.9);
-    box-shadow: 0 0 0 4px rgba(108, 99, 255, 0.12);
-}
-
-textarea {
-    min-height: 140px;
-    resize: vertical;
-}
-
-.form-row {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 16px;
-}
-
-label {
-    display: grid;
-    gap: 8px;
-    font-size: 0.95rem;
-    color: #3c3f52;
-}
-
-select,
-input[type="number"] {
-    width: 100%;
-    border: 1px solid rgba(102, 112, 133, 0.18);
-    border-radius: 18px;
-    padding: 16px 18px;
-    background: rgba(255, 255, 255, 0.9);
-    font-size: 1rem;
-    transition: border-color 180ms ease, box-shadow 180ms ease;
-}
-
-.alert-box {
-    margin: 0;
-    padding: 18px 20px;
-    border-radius: 20px;
-    background: rgba(255, 255, 255, 0.9);
-    border: 1px solid rgba(108, 99, 255, 0.18);
-    box-shadow: 0 14px 30px rgba(88, 95, 163, 0.08);
-    color: #2d3150;
-}
-
-.alert-box.success {
-    border-left: 4px solid #6c63ff;
-}
-
-.alert-box.duplicate {
-    border-left: 4px solid #f26b6b;
-}
-
-button,
-.card button {
-    width: fit-content;
-    padding: 14px 24px;
-    border-radius: 999px;
-    border: none;
-    font-weight: 700;
-    cursor: pointer;
-    transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease;
-}
-
-button {
-    background: linear-gradient(135deg, var(--accent), var(--accent-soft));
-    color: white;
-    box-shadow: 0 16px 30px rgba(108, 99, 255, 0.2);
-}
-
-.resolve-btn {
-    background: #ffffff;
-    color: var(--accent);
-    border: 1px solid rgba(108, 99, 255, 0.3);
-    box-shadow: 0 12px 24px rgba(108, 99, 255, 0.08);
-}
-
-.resolve-btn:hover {
-    background: #f8f7ff;
-}
-
-button:hover,
-.card button:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 20px 35px rgba(108, 99, 255, 0.24);
-}
-
-button:active,
-.card button:active {
-    transform: translateY(0);
-}
-
-.card {
-    background: rgba(255, 255, 255, 0.92);
-    border: 1px solid rgba(102, 112, 133, 0.14);
-    border-radius: 22px;
-    padding: 22px;
-    box-shadow: 0 14px 40px rgba(84, 96, 149, 0.1);
-}
-
-.card:not(:last-child) {
-    margin-bottom: 16px;
-}
-
-.card header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 14px;
-}
-
-.card header strong {
-    font-size: 1rem;
-}
-
-.card p {
-    margin: 10px 0 0;
-    line-height: 1.65;
-    color: var(--muted);
-}
-
-.badge,
-.status {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 999px;
-    padding: 0.5em 0.85em;
-    font-size: 0.82rem;
-    font-weight: 700;
-    letter-spacing: 0.02em;
-}
-
-.badge {
-    background: rgba(108, 99, 255, 0.12);
-    color: #403dac;
-}
-
-.badge.priority-low { background: rgba(66, 190, 135, 0.12); color: #1f805d; }
-.badge.priority-medium { background: rgba(251, 172, 75, 0.14); color: #a56209; }
-.badge.priority-high { background: rgba(242, 107, 107, 0.14); color: #9b2d2d; }
-
-.status-resolved { background: rgba(62, 207, 142, 0.12); color: #147948; }
-.status-pending { background: rgba(108, 99, 255, 0.12); color: #403dac; }
-
-.card-grid {
-    display: grid;
-    gap: 12px;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-@media (max-width: 700px) {
-    .container {
-        margin-top: 12px;
-    }
-    .card-grid {
-        grid-template-columns: 1fr;
-    }
-}
-</style>
+    <style>
+         :root {
+            --surface: rgba(255, 255, 255, 0.85);
+            --surface-strong: rgba(255, 255, 255, 0.95);
+            --accent: #6c63ff;
+            --accent-soft: #9b96ff;
+            --text: #212121;
+            --muted: #5d6675;
+            --danger: #f26b6b;
+            --success: #3ecf8e;
+            --warning: #f3a153;
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: 'Inter', Arial, sans-serif;
+            color: var(--text);
+            background: #D552A3;
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 24px;
+            padding: 32px 24px;
+            background: linear-gradient(135deg, #4435ff 0%, #6c63ff 100%);
+            color: white;
+            box-shadow: 0 24px 60px rgba(55, 62, 130, 0.2);
+        }
+        
+        .header-content {
+            flex: 1;
+            text-align: center;
+        }
+        
+        header h2 {
+            margin: 0;
+            font-size: clamp(1.8rem, 2.6vw, 3rem);
+            letter-spacing: 0.04em;
+        }
+        
+        header p {
+            margin: 10px auto 0;
+            max-width: 720px;
+            opacity: 0.88;
+            font-size: 1rem;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: auto;
+            height: 90px;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            flex-shrink: 0;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(10px);
+        }
+        
+        .logo img {
+            max-height: 100%;
+            width: auto;
+            object-fit: contain;
+            display: block;
+        }
+        
+        .container {
+            width: min(1080px, calc(100% - 32px));
+            margin: -48px auto 40px;
+            display: grid;
+            gap: 24px;
+        }
+        
+        .panel {
+            background: var(--surface);
+            border: 1px solid rgba(255, 255, 255, 0.55);
+            border-radius: 28px;
+            padding: 28px;
+            backdrop-filter: blur(16px);
+            box-shadow: 0 18px 50px rgba(100, 113, 155, 0.12);
+        }
+        
+        h3 {
+            margin-top: 0;
+            font-size: 1.4rem;
+            color: #2a2d3d;
+        }
+        
+        form {
+            display: grid;
+            gap: 16px;
+        }
+        
+        input,
+        textarea {
+            width: 100%;
+            border: 1px solid rgba(102, 112, 133, 0.18);
+            border-radius: 18px;
+            padding: 16px 18px;
+            background: rgba(255, 255, 255, 0.9);
+            font-size: 1rem;
+            transition: border-color 180ms ease, box-shadow 180ms ease;
+        }
+        
+        input:focus,
+        textarea:focus {
+            outline: none;
+            border-color: rgba(108, 99, 255, 0.9);
+            box-shadow: 0 0 0 4px rgba(108, 99, 255, 0.12);
+        }
+        
+        textarea {
+            min-height: 140px;
+            resize: vertical;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+        }
+        
+        label {
+            display: grid;
+            gap: 8px;
+            font-size: 0.95rem;
+            color: #3c3f52;
+        }
+        
+        select,
+        input[type="number"] {
+            width: 100%;
+            border: 1px solid rgba(102, 112, 133, 0.18);
+            border-radius: 18px;
+            padding: 16px 18px;
+            background: rgba(255, 255, 255, 0.9);
+            font-size: 1rem;
+            transition: border-color 180ms ease, box-shadow 180ms ease;
+        }
+        
+        .alert-box {
+            margin: 0;
+            padding: 18px 20px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(108, 99, 255, 0.18);
+            box-shadow: 0 14px 30px rgba(88, 95, 163, 0.08);
+            color: #2d3150;
+        }
+        
+        .alert-box.success {
+            border-left: 4px solid #6c63ff;
+        }
+        
+        .alert-box.duplicate {
+            border-left: 4px solid #f26b6b;
+        }
+        
+        button,
+        .card button {
+            width: fit-content;
+            padding: 14px 24px;
+            border-radius: 999px;
+            border: none;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease;
+        }
+        
+        button {
+            background: linear-gradient(135deg, var(--accent), var(--accent-soft));
+            color: white;
+            box-shadow: 0 16px 30px rgba(108, 99, 255, 0.2);
+        }
+        
+        .resolve-btn {
+            background: #ffffff;
+            color: var(--accent);
+            border: 1px solid rgba(108, 99, 255, 0.3);
+            box-shadow: 0 12px 24px rgba(108, 99, 255, 0.08);
+        }
+        
+        .resolve-btn:hover {
+            background: #f8f7ff;
+        }
+        
+        button:hover,
+        .card button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 20px 35px rgba(108, 99, 255, 0.24);
+        }
+        
+        button:active,
+        .card button:active {
+            transform: translateY(0);
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.92);
+            border: 1px solid rgba(102, 112, 133, 0.14);
+            border-radius: 22px;
+            padding: 22px;
+            box-shadow: 0 14px 40px rgba(84, 96, 149, 0.1);
+        }
+        
+        .card:not(:last-child) {
+            margin-bottom: 16px;
+        }
+        
+        .card header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+        
+        .card header strong {
+            font-size: 1rem;
+        }
+        
+        .card p {
+            margin: 10px 0 0;
+            line-height: 1.65;
+            color: var(--muted);
+        }
+        
+        .badge,
+        .status {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            padding: 0.5em 0.85em;
+            font-size: 0.82rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+        
+        .badge {
+            background: rgba(108, 99, 255, 0.12);
+            color: #403dac;
+        }
+        
+        .badge.priority-low {
+            background: rgba(66, 190, 135, 0.12);
+            color: #1f805d;
+        }
+        
+        .badge.priority-medium {
+            background: rgba(251, 172, 75, 0.14);
+            color: #a56209;
+        }
+        
+        .badge.priority-high {
+            background: rgba(242, 107, 107, 0.14);
+            color: #9b2d2d;
+        }
+        
+        .status-resolved {
+            background: rgba(62, 207, 142, 0.12);
+            color: #147948;
+        }
+        
+        .status-pending {
+            background: rgba(108, 99, 255, 0.12);
+            color: #403dac;
+        }
+        
+        .card-grid {
+            display: grid;
+            gap: 12px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        
+        @media (max-width: 700px) {
+            .container {
+                margin-top: 12px;
+            }
+            .card-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 
 <body>
 
-<header>
-<div class="header-content">
-    <h2>Complaint Management System</h2>
-    <p>Track issues faster with a modern dashboard for every complaint.</p>
-</div>
-<div class="logo">
-    <img src="https://tse4.mm.bing.net/th/id/OIP.St-px2X_XecdamnAmBAgUQHaEd?rs=1&pid=ImgDetMain&o=7&rm=3" alt="CMS - Complaint Management System">
-</div>
-</header>
+    <header>
+        <div class="header-content">
+            <h2>Complaint Management System</h2>
+            <p>Track issues faster with a modern dashboard for every complaint.</p>
+        </div>
+        <div class="logo">
+            <img src="https://tse4.mm.bing.net/th/id/OIP.St-px2X_XecdamnAmBAgUQHaEd?rs=1&pid=ImgDetMain&o=7&rm=3" alt="CMS - Complaint Management System">
+        </div>
+    </header>
 
-<div class="container">
+    <div class="container">
 
-<h3>Submit Complaint</h3>
+        <h3>Submit Complaint</h3>
 
-<form id="complaintForm">
-<input type="text" id="name" placeholder="Your Name" required>
-<input type="text" id="location" placeholder="Location" required>
-<textarea id="description" placeholder="Describe your problem..." required></textarea>
-<div class="form-row">
-    <label>
+        <form id="complaintForm">
+            <input type="text" id="name" placeholder="Your Name" required>
+            <input type="text" id="location" placeholder="Location" required>
+            <textarea id="description" placeholder="Describe your problem..." required></textarea>
+            <div class="form-row">
+                <label>
         Affected residents
         <input type="number" id="residents" placeholder="Number of people affected" min="1" value="1" required>
     </label>
-    <label>
+                <label>
         Severity
         <select id="severity">
             <option value="Low">Low</option>
@@ -316,74 +335,80 @@ button:active,
             <option value="Critical">Critical</option>
         </select>
     </label>
-</div>
-<button type="submit">Submit</button>
-</form>
+            </div>
+            <button type="submit">Submit</button>
+        </form>
 
-<h3>AI Acknowledgement</h3>
-<div id="acknowledgement"></div>
+        <h3>AI Acknowledgement</h3>
+        <div id="acknowledgement"></div>
 
-<h3>All Complaints</h3>
-<div id="complaintList"></div>
+        <h3>All Complaints</h3>
+        <div id="complaintList"></div>
 
-<h3>Work Orders</h3>
-<div id="workOrderList"></div>
+        <h3>Work Orders</h3>
+        <div id="workOrderList"></div>
 
-</div>
+    </div>
 
-<script>
-const API_URL = 'http://localhost:5000/api';
+    <script>
+        const API_URL = 'http://localhost:3000/api';
 
-const statusLabels = {
-    pending: "status-pending",
-    resolved: "status-resolved"
-};
+        const statusLabels = {
+            pending: "status-pending",
+            resolved: "status-resolved"
+        };
 
-const priorityLabels = {
-    Low: "priority-low",
-    Medium: "priority-medium",
-    High: "priority-high"
-};
+        const priorityLabels = {
+            Low: "priority-low",
+            Medium: "priority-medium",
+            High: "priority-high"
+        };
 
-const form = document.getElementById("complaintForm");
-const acknowledgement = document.getElementById("acknowledgement");
-const complaintList = document.getElementById("complaintList");
-const workOrderList = document.getElementById("workOrderList");
+        const form = document.getElementById("complaintForm");
+        const acknowledgement = document.getElementById("acknowledgement");
+        const complaintList = document.getElementById("complaintList");
+        const workOrderList = document.getElementById("workOrderList");
 
-// Form submission with API call
-form.addEventListener("submit", async function(e) {
-    e.preventDefault();
+        // Form submission with API call
+        form.addEventListener("submit", async function(e) {
+            e.preventDefault();
 
-    const name = document.getElementById("name").value.trim();
-    const location = document.getElementById("location").value.trim();
-    const description = document.getElementById("description").value.trim();
-    const residents = Number(document.getElementById("residents").value) || 1;
-    const severity = document.getElementById("severity").value;
+            const name = document.getElementById("name").value.trim();
+            const location = document.getElementById("location").value.trim();
+            const description = document.getElementById("description").value.trim();
+            const residents = Number(document.getElementById("residents").value) || 1;
+            const severity = document.getElementById("severity").value;
 
-    try {
-        const response = await fetch(`${API_URL}/complaints`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ name, location, description, residents, severity })
-        });
+            try {
+                const response = await fetch(`${API_URL}/complaints`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name,
+                        location,
+                        description,
+                        residents,
+                        severity
+                    })
+                });
 
-        const data = await response.json();
+                const data = await response.json();
 
-        if (response.status === 409) {
-            // Duplicate complaint
-            showAcknowledgement(`
+                if (response.status === 409) {
+                    // Duplicate complaint
+                    showAcknowledgement(`
                 <div class="alert-box duplicate">
                     <strong>Duplicate Notice:</strong>
                     We already have an open complaint for this issue at the same location under ticket #${data.duplicateId}.
                     Our team is reviewing it and you will receive an update shortly.
                 </div>
             `);
-        } else if (response.ok) {
-            // Success
-            const complaint = data.complaint;
-            showAcknowledgement(`
+                } else if (response.ok) {
+                    // Success
+                    const complaint = data.complaint;
+                    showAcknowledgement(`
                 <div class="alert-box success">
                     <strong>Thank you, ${complaint.name}.</strong>
                     Your complaint has been routed to the <em>${complaint.department}</em>.
@@ -391,63 +416,63 @@ form.addEventListener("submit", async function(e) {
                     A work order (${data.workOrder.orderId}) has been generated and the responsible team will follow up.
                 </div>
             `);
-            form.reset();
-            await loadComplaints();
-            await loadWorkOrders();
-        }
-    } catch (error) {
-        console.error('Error submitting complaint:', error);
-        showAcknowledgement(`
+                    form.reset();
+                    await loadComplaints();
+                    await loadWorkOrders();
+                }
+            } catch (error) {
+                console.error('Error submitting complaint:', error);
+                showAcknowledgement(`
             <div class="alert-box duplicate">
                 <strong>Error:</strong>
-                Failed to submit complaint. Please check if the backend server is running on http://localhost:5000
+                Failed to submit complaint. Please check if the backend server is running on http://localhost:3000
             </div>
         `);
-    }
-});
+            }
+        });
 
-function showAcknowledgement(messageHtml) {
-    acknowledgement.innerHTML = messageHtml;
-}
+        function showAcknowledgement(messageHtml) {
+            acknowledgement.innerHTML = messageHtml;
+        }
 
-async function loadComplaints() {
-    try {
-        const response = await fetch(`${API_URL}/complaints`);
-        const complaints = await response.json();
-        displayComplaints(complaints);
-    } catch (error) {
-        console.error('Error loading complaints:', error);
-        complaintList.innerHTML = '<div class="alert-box duplicate"><strong>Error:</strong> Failed to load complaints</div>';
-    }
-}
+        async function loadComplaints() {
+            try {
+                const response = await fetch(`${API_URL}/complaints`);
+                const complaints = await response.json();
+                displayComplaints(complaints);
+            } catch (error) {
+                console.error('Error loading complaints:', error);
+                complaintList.innerHTML = '<div class="alert-box duplicate"><strong>Error:</strong> Failed to load complaints</div>';
+            }
+        }
 
-async function loadWorkOrders() {
-    try {
-        const response = await fetch(`${API_URL}/work-orders`);
-        const workOrders = await response.json();
-        displayWorkOrders(workOrders);
-    } catch (error) {
-        console.error('Error loading work orders:', error);
-        workOrderList.innerHTML = '<div class="alert-box duplicate"><strong>Error:</strong> Failed to load work orders</div>';
-    }
-}
+        async function loadWorkOrders() {
+            try {
+                const response = await fetch(`${API_URL}/work-orders`);
+                const workOrders = await response.json();
+                displayWorkOrders(workOrders);
+            } catch (error) {
+                console.error('Error loading work orders:', error);
+                workOrderList.innerHTML = '<div class="alert-box duplicate"><strong>Error:</strong> Failed to load work orders</div>';
+            }
+        }
 
-function displayComplaints(complaints) {
-    complaintList.innerHTML = "";
+        function displayComplaints(complaints) {
+            complaintList.innerHTML = "";
 
-    if (complaints.length === 0) {
-        complaintList.innerHTML = '<p>No complaints yet.</p>';
-        return;
-    }
+            if (complaints.length === 0) {
+                complaintList.innerHTML = '<p>No complaints yet.</p>';
+                return;
+            }
 
-    complaints.forEach(c => {
-        const div = document.createElement("div");
-        div.className = "card";
+            complaints.forEach(c => {
+                const div = document.createElement("div");
+                div.className = "card";
 
-        const priorityClass = c.priority ? c.priority.toLowerCase() : 'low';
-        const statusClass = statusLabels[c.status.toLowerCase()] || 'status-pending';
+                const priorityClass = c.priority ? c.priority.toLowerCase() : 'low';
+                const statusClass = statusLabels[c.status.toLowerCase()] || 'status-pending';
 
-        div.innerHTML = `
+                div.innerHTML = `
             <header>
                 <strong>Complaint #${c.id}</strong>
                 <span class="badge priority-${priorityClass}">${c.priority}</span>
@@ -464,25 +489,25 @@ function displayComplaints(complaints) {
             <button class="resolve-btn" onclick="markDone(${c.id})">Mark Done</button>
         `;
 
-        complaintList.appendChild(div);
-    });
-}
+                complaintList.appendChild(div);
+            });
+        }
 
-function displayWorkOrders(workOrders) {
-    workOrderList.innerHTML = "";
+        function displayWorkOrders(workOrders) {
+            workOrderList.innerHTML = "";
 
-    if (workOrders.length === 0) {
-        workOrderList.innerHTML = '<p>No work orders yet.</p>';
-        return;
-    }
+            if (workOrders.length === 0) {
+                workOrderList.innerHTML = '<p>No work orders yet.</p>';
+                return;
+            }
 
-    workOrders.forEach(order => {
-        const div = document.createElement("div");
-        div.className = "card";
+            workOrders.forEach(order => {
+                const div = document.createElement("div");
+                div.className = "card";
 
-        const priorityClass = order.priorityScore >= 8 ? 'high' : order.priorityScore >= 5 ? 'medium' : 'low';
+                const priorityClass = order.priorityScore >= 8 ? 'high' : order.priorityScore >= 5 ? 'medium' : 'low';
 
-        div.innerHTML = `
+                div.innerHTML = `
             <header>
                 <strong>Work Order ${order.orderId}</strong>
                 <span class="badge priority-${priorityClass}">P${order.priorityScore}</span>
@@ -497,35 +522,38 @@ function displayWorkOrders(workOrders) {
             <p><strong>Work Order Details</strong><br>${order.issue}</p>
         `;
 
-        workOrderList.appendChild(div);
-    });
-}
-
-async function markDone(id) {
-    try {
-        const response = await fetch(`${API_URL}/complaints/${id}/status`, {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ status: 'Resolved' })
-        });
-
-        if (response.ok) {
-            await loadComplaints();
+                workOrderList.appendChild(div);
+            });
         }
-    } catch (error) {
-        console.error('Error updating complaint:', error);
-        alert('Failed to update complaint status');
-    }
-}
 
-// Load data when page loads
-document.addEventListener('DOMContentLoaded', async function() {
-    await loadComplaints();
-    await loadWorkOrders();
-});
-</script>
+        async function markDone(id) {
+            try {
+                const response = await fetch(`${API_URL}/complaints/${id}/status`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        status: 'Resolved'
+                    })
+                });
+
+                if (response.ok) {
+                    await loadComplaints();
+                }
+            } catch (error) {
+                console.error('Error updating complaint:', error);
+                alert('Failed to update complaint status');
+            }
+        }
+
+        // Load data when page loads
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadComplaints();
+            await loadWorkOrders();
+        });
+    </script>
 
 </body>
+
 </html>

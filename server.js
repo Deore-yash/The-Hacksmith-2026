@@ -11,7 +11,7 @@ const DB_PATH = path.join(__dirname, 'complaints.db');
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static(__dirname));
+app.use(express.static(path.join(__dirname, 'hackthon')));
 
 // Initialize SQLite Database
 const db = new sqlite3.Database(DB_PATH, (err) => {
@@ -64,6 +64,31 @@ function initializeDatabase() {
     });
 }
 
+// Utility functions
+function calculatePriority(severity, residents) {
+    const severityMap = { 'Low': 1, 'Medium': 2, 'High': 3, 'Critical': 4 };
+    const severityScore = severityMap[severity] || 1;
+    const residentScore = Math.min(Math.ceil(residents / 5), 4);
+    return (severityScore + residentScore) * 1.5;
+}
+
+function getPriorityLabel(score) {
+    if (score >= 8) return 'High';
+    if (score >= 5) return 'Medium';
+    return 'Low';
+}
+
+function calculateDueDate(priorityScore) {
+    const dueDays = priorityScore >= 8 ? 3 : priorityScore >= 5 ? 7 : 14;
+    const date = new Date();
+    date.setDate(date.getDate() + dueDays);
+    return date.toLocaleDateString();
+}
+
+function normalizeText(text) {
+    return text.toLowerCase().trim().replace(/\s+/g, ' ');
+}
+
 // API Endpoints
 
 // Get all complaints
@@ -76,7 +101,17 @@ app.get('/api/complaints', (req, res) => {
     });
 });
 
-// Get all work orders
+// Get all work orders (with hyphen)
+app.get('/api/work-orders', (req, res) => {
+    db.all('SELECT * FROM work_orders ORDER BY orderId DESC', (err, rows) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        res.json(rows || []);
+    });
+});
+
+// Alias for backward compatibility
 app.get('/api/workorders', (req, res) => {
     db.all('SELECT * FROM work_orders ORDER BY orderId DESC', (err, rows) => {
         if (err) {
@@ -92,39 +127,111 @@ app.post('/api/complaints', (req, res) => {
         name,
         location,
         description,
-        department,
-        departmentKey,
         severity,
-        residents,
-        priority,
-        priorityScore,
-        status,
-        workOrderId
+        residents
     } = req.body;
 
-    const now = new Date().toLocaleString();
+    // Validate required fields
+    if (!name || !location || !description || !severity) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
 
-    db.run(
-        `INSERT INTO complaints (
-            name, location, description, department, departmentKey,
-            severity, residents, priority, priorityScore, status,
-            workOrderId, createdAt, updatedAt
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-            name, location, description, department, departmentKey,
-            severity, residents, priority, priorityScore, status,
-            workOrderId, now, now
-        ],
-        function(err) {
+    const residentCount = Math.max(residents || 1, 1);
+    const normalizedLocation = normalizeText(location);
+    const normalizedDescription = normalizeText(description);
+
+    // Check for duplicates first
+    db.get(
+        `SELECT id FROM complaints WHERE 
+         LOWER(TRIM(location)) = ? AND 
+         LOWER(TRIM(description)) LIKE ?`, [location, `%${normalizedDescription.substring(0, 20)}%`],
+        (err, duplicate) => {
             if (err) {
                 return res.status(500).json({ error: err.message });
             }
-            res.status(201).json({
-                id: this.lastID,
-                name, location, description, department, departmentKey,
-                severity, residents, priority, priorityScore, status,
-                workOrderId, createdAt: now
-            });
+
+            if (duplicate) {
+                return res.status(409).json({
+                    isDuplicate: true,
+                    duplicateId: duplicate.id,
+                    message: `Duplicate complaint found. Ticket #${duplicate.id} already exists for this location and issue.`
+                });
+            }
+
+            // Calculate priority
+            const priorityScore = calculatePriority(severity, residentCount);
+            const priority = getPriorityLabel(priorityScore);
+            const department = 'General';
+            const departmentKey = 'general';
+            const now = new Date().toLocaleString();
+
+            // Insert complaint
+            db.run(
+                `INSERT INTO complaints (
+                    name, location, description, department, departmentKey,
+                    severity, residents, priority, priorityScore, status,
+                    createdAt, updatedAt
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
+                    name, location, description, department, departmentKey,
+                    severity, residentCount, priority, priorityScore, 'Pending',
+                    now, now
+                ],
+                function(err) {
+                    if (err) {
+                        return res.status(500).json({ error: err.message });
+                    }
+
+                    const complaintId = this.lastID;
+                    const workOrderId = `WO-${String(complaintId).padStart(4, '0')}`;
+                    const dueDate = calculateDueDate(priorityScore);
+
+                    // Insert work order
+                    db.run(
+                        `INSERT INTO work_orders (
+                            orderId, assignedDepartment, departmentKey, location, issue,
+                            priorityScore, severity, residentsAffected, status, createdAt, dueDate
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
+                            workOrderId, department, departmentKey, location, description,
+                            priorityScore, severity, residentCount, 'Pending', now, dueDate
+                        ],
+                        function(err) {
+                            if (err) {
+                                return res.status(500).json({ error: err.message });
+                            }
+
+                            res.status(201).json({
+                                complaint: {
+                                    id: complaintId,
+                                    name,
+                                    location,
+                                    description,
+                                    department,
+                                    departmentKey,
+                                    severity,
+                                    residents: residentCount,
+                                    priority,
+                                    priorityScore,
+                                    status: 'Pending',
+                                    createdAt: now
+                                },
+                                workOrder: {
+                                    orderId: workOrderId,
+                                    assignedDepartment: department,
+                                    departmentKey,
+                                    location,
+                                    issue: description,
+                                    priorityScore,
+                                    severity,
+                                    residentsAffected: residentCount,
+                                    status: 'Pending',
+                                    createdAt: now,
+                                    dueDate
+                                }
+                            });
+                        }
+                    );
+                }
+            );
         }
     );
 });
@@ -149,8 +256,7 @@ app.post('/api/workorders', (req, res) => {
         `INSERT INTO work_orders (
             orderId, assignedDepartment, departmentKey, location, issue,
             priorityScore, severity, residentsAffected, status, createdAt, dueDate
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
             orderId, assignedDepartment, departmentKey, location, issue,
             priorityScore, severity, residentsAffected, status, createdAt, dueDate
         ],
@@ -163,15 +269,38 @@ app.post('/api/workorders', (req, res) => {
     );
 });
 
-// Update a complaint
+// Update a complaint status (PATCH endpoint)
+app.patch('/api/complaints/:id/status', (req, res) => {
+    const { id } = req.params;
+    const { status } = req.body;
+    const now = new Date().toLocaleString();
+
+    if (!status) {
+        return res.status(400).json({ error: 'Status is required' });
+    }
+
+    db.run(
+        'UPDATE complaints SET status = ?, updatedAt = ? WHERE id = ?', [status, now, id],
+        function(err) {
+            if (err) {
+                return res.status(500).json({ error: err.message });
+            }
+            if (this.changes === 0) {
+                return res.status(404).json({ error: 'Complaint not found' });
+            }
+            res.json({ id, status, updatedAt: now });
+        }
+    );
+});
+
+// Keep PUT for backward compatibility
 app.put('/api/complaints/:id', (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
     const now = new Date().toLocaleString();
 
     db.run(
-        'UPDATE complaints SET status = ?, updatedAt = ? WHERE id = ?',
-        [status, now, id],
+        'UPDATE complaints SET status = ?, updatedAt = ? WHERE id = ?', [status, now, id],
         function(err) {
             if (err) {
                 return res.status(500).json({ error: err.message });
@@ -207,8 +336,7 @@ app.post('/api/check-duplicate', (req, res) => {
     const { location, description } = req.body;
 
     db.get(
-        `SELECT * FROM complaints WHERE location = ? AND description = ? LIMIT 1`,
-        [location, description],
+        `SELECT * FROM complaints WHERE location = ? AND description = ? LIMIT 1`, [location, description],
         (err, row) => {
             if (err) {
                 return res.status(500).json({ error: err.message });
@@ -220,7 +348,7 @@ app.post('/api/check-duplicate', (req, res) => {
 
 // Serve index.html for root
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
+    res.sendFile(path.join(__dirname, 'hackthon', 'index.html'));
 });
 
 // Start server
