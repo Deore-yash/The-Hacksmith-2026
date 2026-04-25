@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Complaint Management System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lucide@0.460.0/dist/umd/lucide.css">
+
+<style>
+:root {
+    --surface: rgba(255, 255, 255, 0.95);
+    --surface-strong: rgba(255, 255, 255, 1);
+    --accent: #6366f1;
+    --accent-soft: #a5b4fc;
+    --text: #1f2937;
+    --muted: #6b7280;
+    --danger: #ef4444;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --card-bg: rgba(255, 255, 255, 0.9);
+    --border: rgba(0, 0, 0, 0.1);
+    --shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    --shadow-hover: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="dark"] {
+    --surface: rgba(30, 41, 59, 0.95);
+    --surface-strong: rgba(30, 41, 59, 1);
+    --accent: #818cf8;
+    --accent-soft: #c7d2fe;
+    --text: #f9fafb;
+    --muted: #9ca3af;
+    --danger: #f87171;
+    --success: #34d399;
+    --warning: #fbbf24;
+    --background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+    --card-bg: rgba(30, 41, 59, 0.9);
+    --border: rgba(255, 255, 255, 0.1);
+    --shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    --shadow-hover: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+* {
+    box-sizing: border-box;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: var(--text);
+    background: var(--background);
+    background-attachment: fixed;
+    line-height: 1.6;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 24px;
+    padding: 2rem 1.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    box-shadow: var(--shadow);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header-content {
+    flex: 1;
+    text-align: center;
+}
+
+header h2 {
+    margin: 0;
+    font-size: clamp(1.5rem, 3vw, 2.5rem);
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    background: linear-gradient(135deg, var(--accent), var(--accent-soft));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+header p {
+    margin: 0.5rem auto 0;
+    max-width: 600px;
+    opacity: 0.8;
+    font-size: 1rem;
+    font-weight: 400;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.logo:hover {
+    transform: scale(1.05);
+    box-shadow: var(--shadow-hover);
+}
+
+.logo img {
+    max-width: 80%;
+    max-height: 80%;
+    object-fit: contain;
+}
+
+.theme-toggle {
+    background: none;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: 0.5rem;
+    cursor: pointer;
+    color: var(--text);
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+}
+
+.theme-toggle:hover {
+    background: var(--surface);
+    box-shadow: var(--shadow);
+    transform: scale(1.05);
+}
+
+.theme-toggle i {
+    width: 20px;
+    height: 20px;
+}
+
+.clear-db-btn {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: var(--danger);
+}
+
+.clear-db-btn:hover {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: var(--danger);
+}
+
+.container {
+    max-width: 1200px;
+    margin: 4rem auto 0;
+    padding: 2rem 1.5rem;
+    display: grid;
+    gap: 2rem;
+}
+
+.panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 2rem;
+    backdrop-filter: blur(20px);
+    box-shadow: var(--shadow);
+    transition: box-shadow 0.3s ease;
+}
+
+.panel:hover {
+    box-shadow: var(--shadow-hover);
+}
+
+h3 {
+    margin-top: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+h3::before {
+    content: '';
+    width: 4px;
+    height: 24px;
+    background: var(--accent);
+    border-radius: 2px;
+}
+
+form {
+    display: grid;
+    gap: 1.5rem;
+}
+
+input,
+textarea,
+select {
+    width: 100%;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    background: var(--card-bg);
+    font-size: 1rem;
+    font-family: inherit;
+    transition: all 0.2s ease;
+    color: var(--text);
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    transform: translateY(-1px);
+}
+
+textarea {
+    min-height: 120px;
+    resize: vertical;
+    line-height: 1.6;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text);
+}
+
+.alert-box {
+    margin: 0;
+    padding: 1.25rem 1.5rem;
+    border-radius: 16px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    color: var(--text);
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.alert-box.success {
+    border-left: 4px solid var(--success);
+}
+
+.alert-box.duplicate {
+    border-left: 4px solid var(--danger);
+}
+
+button {
+    width: fit-content;
+    padding: 0.875rem 2rem;
+    border-radius: 12px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: linear-gradient(135deg, var(--accent), var(--accent-soft));
+    color: white;
+    box-shadow: var(--shadow);
+    font-size: 1rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+.resolve-btn {
+    background: var(--card-bg);
+    color: var(--accent);
+    border: 2px solid var(--accent);
+    box-shadow: none;
+}
+
+.resolve-btn:hover {
+    background: var(--accent);
+    color: white;
+}
+
+.card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+    transition: all 0.3s ease;
+    animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+}
+
+.card:not(:last-child) {
+    margin-bottom: 1rem;
+}
+
+.card header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.card header strong {
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.card p {
+    margin: 0.75rem 0 0;
+    line-height: 1.6;
+    color: var(--muted);
+}
+
+.badge,
+.status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 20px;
+    padding: 0.375rem 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.025em;
+    text-transform: uppercase;
+}
+
+.badge {
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--accent);
+}
+
+.badge.priority-low {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--success);
+}
+
+.badge.priority-medium {
+    background: rgba(245, 158, 11, 0.1);
+    color: var(--warning);
+}
+
+.badge.priority-high {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger);
+}
+
+.status-resolved {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--success);
+}
+
+.status-pending {
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--accent);
+}
+
+.card-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+
+</style>
+</head>
+
+<body>
+
+<header>
+<div class="header-content">
+    <h2>Complaint Management System</h2>
+    <p>Track issues faster with a modern dashboard for every complaint.</p>
+</div>
+<div class="logo">
+    <img src="https://tse4.mm.bing.net/th/id/OIP.St-px2X_XecdamnAmBAgUQHaEd?rs=1&pid=ImgDetMain&o=7&rm=3" alt="CMS - Complaint Management System">
+</div>
+<button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+    <i data-lucide="sun" class="sun-icon"></i>
+    <i data-lucide="moon" class="moon-icon" style="display: none;"></i>
+</button>
+<button class="theme-toggle clear-db-btn" id="clearDbBtn" aria-label="Clear database" title="Delete all complaints and work orders">
+    <i data-lucide="trash-2"></i>
+</button>
+</header>
+
+<div class="container">
+
+<section class="panel">
+<h3><i data-lucide="plus-circle"></i> Submit Complaint</h3>
+
+<form id="complaintForm">
+<div class="form-row">
+    <label>
+        Your Name
+        <input type="text" id="name" placeholder="Enter your full name" required>
+    </label>
+    <label>
+        Location
+        <input type="text" id="location" placeholder="Street address or area" required>
+    </label>
+</div>
+<label>
+    Description
+    <textarea id="description" placeholder="Describe your problem in detail..." required></textarea>
+</label>
+<div class="form-row">
+    <label>
+        Affected Residents
+        <input type="number" id="residents" placeholder="Number of people affected" min="1" value="1" required>
+    </label>
+    <label>
+        Severity Level
+        <select id="severity">
+            <option value="Low">Low</option>
+            <option value="Medium">Medium</option>
+            <option value="High">High</option>
+            <option value="Critical">Critical</option>
+        </select>
+    </label>
+</div>
+<button type="submit"><i data-lucide="send"></i> Submit Complaint</button>
+</form>
+</section>
+
+<section class="panel">
+<h3><i data-lucide="message-square"></i> AI Acknowledgement</h3>
+<div id="acknowledgement"></div>
+</section>
+
+<section class="panel">
+<h3><i data-lucide="list"></i> All Complaints</h3>
+<div id="complaintList"></div>
+</section>
+
+<section class="panel">
+<h3><i data-lucide="clipboard-list"></i> Work Orders</h3>
+<div id="workOrderList"></div>
+</section>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.460.0/dist/umd/lucide.js"></script>
+<script>
+const API_BASE = 'http://localhost:3000/api';
+
+let complaints = [];
+let workOrders = [];
+
+const departmentKeywords = {
+    roads: ["road", "pothole", "street", "traffic", "intersection", "asphalt"],
+    sanitation: ["garbage", "trash", "sewer", "drain", "cleaning", "waste", "smell"],
+    water: ["water", "leak", "pipe", "supply", "tap", "drainage", "flood"],
+    electricity: ["electric", "power", "light", "outage", "wiring", "transformer", "socket"],
+    parks: ["park", "garden", "playground", "trees", "green", "bench", "grass"],
+    "illegal construction": ["construction", "building", "permit", "illegal", "encroachment", "fence"]
+};
+
+const severityWeight = {
+    Low: 1,
+    Medium: 2,
+    High: 3,
+    Critical: 4
+};
+
+const departmentNames = {
+    roads: "Roads Department",
+    sanitation: "Sanitation Department",
+    water: "Water Services",
+    electricity: "Electricity Department",
+    parks: "Parks & Recreation",
+    "illegal construction": "Building Control"
+};
+
+const statusLabels = {
+    pending: "status-pending",
+    resolved: "status-resolved"
+};
+
+const priorityLabels = {
+    Low: "priority-low",
+    Medium: "priority-medium",
+    High: "priority-high"
+};
+
+const form = document.getElementById("complaintForm");
+const acknowledgement = document.getElementById("acknowledgement");
+const complaintList = document.getElementById("complaintList");
+const workOrderList = document.getElementById("workOrderList");
+const themeToggle = document.getElementById("themeToggle");
+const clearDbBtn = document.getElementById("clearDbBtn");
+const sunIcon = document.querySelector(".sun-icon");
+const moonIcon = document.querySelector(".moon-icon");
+
+lucide.createIcons();
+
+function loadData() {
+    return Promise.all([
+        fetch(`${API_BASE}/complaints`).then(res => res.json()),
+        fetch(`${API_BASE}/workorders`).then(res => res.json())
+    ]).then(([complaintsData, workOrdersData]) => {
+        complaints = complaintsData;
+        workOrders = workOrdersData;
+        displayComplaints();
+        displayWorkOrders();
+    }).catch(error => {
+        console.error('Error loading data:', error);
+        showAcknowledgement(`
+            <div class="alert-box duplicate">
+                <strong>Error:</strong> Unable to connect to server. Make sure it's running on localhost:3000
+            </div>
+        `);
+    });
+}
+
+function initTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    updateThemeIcon(savedTheme);
+}
+
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    updateThemeIcon(newTheme);
+}
+
+function updateThemeIcon(theme) {
+    if (theme === 'dark') {
+        sunIcon.style.display = 'none';
+        moonIcon.style.display = 'block';
+    } else {
+        sunIcon.style.display = 'block';
+        moonIcon.style.display = 'none';
+    }
+}
+
+themeToggle.addEventListener('click', toggleTheme);
+
+// Initialize theme on load
+initTheme();
+
+loadData();
+
+function clearDatabase() {
+    if (!confirm('Are you sure you want to delete all complaints and work orders? This action cannot be undone.')) {
+        return;
+    }
+
+    fetch(`${API_BASE}/clear`, {
+        method: 'DELETE'
+    })
+    .then(res => res.json())
+    .then(data => {
+        complaints = [];
+        workOrders = [];
+        displayComplaints();
+        displayWorkOrders();
+        showAcknowledgement(`
+            <div class="alert-box success">
+                <strong>Database cleared successfully!</strong>
+                All complaints and work orders have been deleted.
+            </div>
+        `);
+    })
+    .catch(error => {
+        console.error('Error clearing database:', error);
+        showAcknowledgement(`
+            <div class="alert-box duplicate">
+                <strong>Error:</strong> Unable to clear database.
+            </div>
+        `);
+    });
+}
+
+clearDbBtn.addEventListener('click', clearDatabase);
+
+form.addEventListener("submit", async function(e) {
+    e.preventDefault();
+
+    const name = document.getElementById("name").value.trim();
+    const location = document.getElementById("location").value.trim();
+    const description = document.getElementById("description").value.trim();
+    const residents = Number(document.getElementById("residents").value) || 1;
+    const severity = document.getElementById("severity").value;
+
+    const normalizedLocation = normalizeText(location);
+    const normalizedDescription = normalizeText(description);
+    const duplicate = findDuplicate(normalizedLocation, normalizedDescription);
+
+    if (duplicate) {
+        showAcknowledgement(draftAcknowledgement(duplicate, true, duplicate.id));
+        return;
+    }
+
+    const departmentKey = detectDepartment(normalizedDescription + " " + normalizedLocation);
+    const department = departmentNames[departmentKey] || "General Services";
+    const priorityScore = calculatePriorityScore(severity, residents);
+    const priority = getPriorityLabel(priorityScore);
+
+    const complaint = {
+        name,
+        location,
+        description,
+        department,
+        departmentKey,
+        severity,
+        residents,
+        priority,
+        priorityScore,
+        status: "Pending",
+        createdAt: new Date().toLocaleString()
+    };
+
+    try {
+        const complaintRes = await fetch(`${API_BASE}/complaints`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(complaint)
+        });
+
+        const savedComplaint = await complaintRes.json();
+        const orderId = `WO-${String(savedComplaint.id).padStart(4, "0")}`;
+        const workOrder = createWorkOrder(savedComplaint.id, departmentKey, department, location, description, priorityScore, residents, severity);
+        workOrder.orderId = orderId;
+
+        const updatedComplaint = { ...savedComplaint, workOrderId: orderId };
+        await fetch(`${API_BASE}/complaints`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updatedComplaint)
+        });
+
+        await fetch(`${API_BASE}/workorders`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(workOrder)
+        });
+
+        complaints.push(savedComplaint);
+        workOrders.push(workOrder);
+
+        showAcknowledgement(draftAcknowledgement(savedComplaint, false));
+        displayComplaints();
+        displayWorkOrders();
+        form.reset();
+
+        setTimeout(() => lucide.createIcons(), 100);
+    } catch (error) {
+        console.error('Error saving complaint:', error);
+        showAcknowledgement(`
+            <div class="alert-box duplicate">
+                <strong>Error:</strong> Unable to save your complaint. Please try again.
+            </div>
+        `);
+    }
+});
+
+function normalizeText(text) {
+    return text.toLowerCase().replace(/\s+/g, " ").trim();
+}
+
+function findDuplicate(location, description) {
+    return complaints.find(c => {
+        const sameLocation = normalizeText(c.location) === location;
+        const sameDescription = normalizeText(c.description) === description;
+        const fuzzyMatch = description.includes(normalizeText(c.description).slice(0, 20)) || normalizeText(c.description).includes(description.slice(0, 20));
+        return sameLocation && (sameDescription || fuzzyMatch);
+    });
+}
+
+function detectDepartment(text) {
+    for (const dept in departmentKeywords) {
+        for (const keyword of departmentKeywords[dept]) {
+            if (text.includes(keyword)) {
+                return dept;
+            }
+        }
+    }
+    return "sanitation";
+}
+
+function calculatePriorityScore(severity, residents) {
+    const base = severityWeight[severity] || 1;
+    const residentFactor = Math.min(residents, 20) / 4;
+    return Math.min(Math.round(base * 2 + residentFactor), 10);
+}
+
+function getPriorityLabel(score) {
+    if (score >= 8) return "High";
+    if (score >= 5) return "Medium";
+    return "Low";
+}
+
+function draftAcknowledgement(complaint, isDuplicate, duplicateId) {
+    if (isDuplicate) {
+        return `
+            <div class="alert-box duplicate">
+                <strong>Duplicate Notice:</strong>
+                We already have an open complaint for this issue at the same location under ticket #${duplicateId}.
+                Our team is reviewing it and you will receive an update shortly.
+            </div>`;
+    }
+
+    return `
+        <div class="alert-box success">
+            <strong>Thank you, ${complaint.name}.</strong>
+            Your complaint has been routed to the <em>${complaint.department}</em>.
+            Ticket #${complaint.id} has been created with a priority score of ${complaint.priorityScore}.
+            A work order (#${complaint.workOrderId}) has been generated and the responsible team will follow up.
+        </div>`;
+}
+
+function showAcknowledgement(messageHtml) {
+    acknowledgement.innerHTML = messageHtml;
+}
+
+function createWorkOrder(id, departmentKey, department, location, description, priorityScore, residents, severity) {
+    const dueDays = priorityScore >= 8 ? 1 : priorityScore >= 5 ? 3 : 5;
+    const dueDate = new Date();
+    dueDate.setDate(dueDate.getDate() + dueDays);
+
+    return {
+        orderId: `WO-${String(id).padStart(4, "0")}`,
+        assignedDepartment: department,
+        departmentKey,
+        location,
+        issue: description,
+        priorityScore,
+        severity,
+        residentsAffected: residents,
+        status: "Assigned",
+        createdAt: new Date().toLocaleString(),
+        dueDate: dueDate.toLocaleDateString()
+    };
+}
+
+function displayComplaints() {
+    complaintList.innerHTML = "";
+
+    complaints.forEach(c => {
+        const div = document.createElement("div");
+        div.className = "card";
+
+        div.innerHTML = `
+            <header>
+                <strong>Complaint #${c.id}</strong>
+                <span class="badge priority-${c.priority.toLowerCase()}">${c.priority}</span>
+            </header>
+            <div class="card-grid">
+                <div><strong>Name</strong><br>${c.name}</div>
+                <div><strong>Location</strong><br>${c.location}</div>
+                <div><strong>Department</strong><br>${c.department}</div>
+                <div><strong>Status</strong><br><span class="status ${statusLabels[c.status.toLowerCase()]}">${c.status}</span></div>
+                <div><strong>Severity</strong><br>${c.severity}</div>
+                <div><strong>Residents</strong><br>${c.residents}</div>
+            </div>
+            <p><strong>Issue</strong><br>${c.description}</p>
+            <button class="resolve-btn" onclick="markDone(${c.id})"><i data-lucide="check-circle"></i> Mark Done</button>
+        `;
+
+        complaintList.appendChild(div);
+    });
+    
+    // Re-create icons for new content
+    setTimeout(() => lucide.createIcons(), 100);
+}
+
+function displayWorkOrders() {
+    workOrderList.innerHTML = "";
+
+    workOrders.forEach(order => {
+        const div = document.createElement("div");
+        div.className = "card";
+
+        div.innerHTML = `
+            <header>
+                <strong>Work Order ${order.orderId}</strong>
+                <span class="badge priority-${getPriorityLabel(order.priorityScore).toLowerCase()}">${getPriorityLabel(order.priorityScore)}</span>
+            </header>
+            <div class="card-grid">
+                <div><strong>Department</strong><br>${order.assignedDepartment}</div>
+                <div><strong>Location</strong><br>${order.location}</div>
+                <div><strong>Severity</strong><br>${order.severity}</div>
+                <div><strong>Due Date</strong><br>${order.dueDate}</div>
+                <div><strong>Residents</strong><br>${order.residentsAffected}</div>
+            </div>
+            <p><strong>Work Order Details</strong><br>${order.issue}</p>
+        `;
+
+        workOrderList.appendChild(div);
+    });
+    
+    // Re-create icons for new content
+    setTimeout(() => lucide.createIcons(), 100);
+}
+
+function markDone(id) {
+    const complaint = complaints.find(c => c.id === id);
+    if (!complaint) return;
+
+    fetch(`${API_BASE}/complaints/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'Resolved' })
+    })
+    .then(res => res.json())
+    .then(data => {
+        complaint.status = 'Resolved';
+        displayComplaints();
+    })
+    .catch(error => console.error('Unable to update complaint:', error));
+}
+</script>
+
+</body>
+</html>
